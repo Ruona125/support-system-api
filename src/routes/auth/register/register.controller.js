@@ -6,7 +6,7 @@ const jwt = require("jsonwebtoken");
 const JWT_SECRET = "my_secret_key";
 
 async function registerAgent(req, res) {
-  const { name, phonenumber, email, passwords } = req.body;
+  const { name, email, passwords } = req.body;
   if (!email || !passwords) {
     return res
       .status(400)
@@ -17,13 +17,12 @@ async function registerAgent(req, res) {
   const hashedPassword = await bcrypt.hash(passwords, 10);
 
   try {
-    await db("users").insert({
+    await db("agent").insert({
       name,
       passwords: hashedPassword,
-      phonenumber,
       email,
       roles: "agent",
-      user_id: uuid.v4(),
+      agent_id: uuid.v4(),
     });
     res.json({ message: "user successfully created" });
   } catch (err) {
@@ -33,7 +32,7 @@ async function registerAgent(req, res) {
 }
 
 async function registerCustomer(req, res) {
-  const { name, phonenumber, email, passwords } = req.body;
+  const { name, email, passwords, address } = req.body;
   if (!email || !passwords) {
     return res
       .status(400)
@@ -44,13 +43,13 @@ async function registerCustomer(req, res) {
   const hashedPassword = await bcrypt.hash(passwords, 10);
 
   try {
-    await db("users").insert({
+    await db("customers").insert({
       name,
       passwords: hashedPassword,
-      phonenumber,
       email,
       roles: "customer",
-      user_id: uuid.v4(),
+      address,
+      customer_id: uuid.v4(),
     });
     res.json("customer successfully created");
   } catch (err) {
@@ -61,7 +60,7 @@ async function registerCustomer(req, res) {
 
 function getRegisteredAgent(req, res) {
   db.select("*")
-    .from("users")
+    .from("agent")
     .then((agent) => res.status(200).json(agent))
     .catch((err) => res.status(400).json(err));
 }
