@@ -12,7 +12,7 @@ async function agentLogin(req, res) {
 
   try {
     //find the agent in the database
-    const agent = await db("support_agent").where({ email }).first();
+    const agent = await db("users").where({ email }).first();
 
     if (!agent) {
       return res.status(401).json("support agent not found");
