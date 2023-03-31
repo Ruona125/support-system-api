@@ -2,12 +2,12 @@ const { db } = require("../../utils/database");
 const uuid = require("uuid");
 
 function products(req, res) {
-  const { product_name } = req.body;
+  const { name } = req.body;
   db("product")
     .returning("*")
     .insert({
       product_id: uuid.v4(),
-      product_name,
+      name,
     })
     .then((product) => {
       res.json(product[0]);
