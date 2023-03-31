@@ -15,6 +15,14 @@ function products(req, res) {
     .catch((err) => res.status(400).json("error createing product"));
 }
 
+function viewProducts(req, res) {
+  db.select("*")
+    .from("product")
+    .then((product) => res.status(200).json(product))
+    .catch((err) => res.status(400).json(err));
+}
+
 module.exports = {
   products,
+  viewProducts,
 };
