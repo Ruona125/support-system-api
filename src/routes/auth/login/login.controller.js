@@ -71,8 +71,8 @@ async function customerLogins(req, res) {
     );
 
     //this is to decode the token to check if the id and roles are stored there
-    //const decode = jwt.decode(token)
-    //console.log(decode.agentId)
+    // const decode = jwt.decode(token);
+    // console.log(decode.customerId);
 
     //return the agent details with token
     const customerWithToken = { ...customer, token };

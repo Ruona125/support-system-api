@@ -68,7 +68,30 @@ async function closeCase(req, res) {
   }
 }
 
+function viewCases(req, res) {
+  db.select("*")
+    .from("cases")
+    .then((cases) => res.status(200).json(cases))
+    .catch((err) => res.status(200).json(err));
+}
+
+function certainCase(req, res) {
+  const { case_id } = req.params;
+  db.select("*")
+    .from("cases")
+    .where({ case_id })
+    .then((singleCase) => {
+      if (singleCase.length) {
+        return res.json(singleCase[0]);
+      } else {
+        return res.status(400).json("case not found");
+      }
+    });
+}
+
 module.exports = {
   createCase,
   closeCase,
+  viewCases,
+  certainCase,
 };
