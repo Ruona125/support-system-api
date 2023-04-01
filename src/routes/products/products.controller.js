@@ -22,7 +22,22 @@ function viewProducts(req, res) {
     .catch((err) => res.status(400).json(err));
 }
 
+function certainProduct(req, res) {
+  const { product_id } = req.params;
+  db.select("*")
+    .from("product")
+    .where({ product_id })
+    .then((product) => {
+      if (product.length) {
+        return res.json(product[0]);
+      } else {
+        return res.status(400).json("product not found");
+      }
+    });
+}
+
 module.exports = {
   products,
   viewProducts,
+  certainProduct,
 };

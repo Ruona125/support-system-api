@@ -68,9 +68,11 @@ async function closeCase(req, res) {
   }
 }
 
+//this is the function for agent to view all cases
 function viewCases(req, res) {
   db.select("*")
     .from("cases")
+    // .where("status", "=", "new")
     .then((cases) => res.status(200).json(cases))
     .catch((err) => res.status(200).json(err));
 }

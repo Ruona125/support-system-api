@@ -72,9 +72,24 @@ function getRegisteredCustomer(req, res) {
     .catch((err) => res.status(400).json(err));
 }
 
+function certainCustomer(req, res) {
+  const { customer_id } = req.params;
+  db.select("*")
+    .from("customers")
+    .where({ customer_id })
+    .then((customer) => {
+      if (customer.length) {
+        return res.json(customer[0]);
+      } else {
+        return res.staus(400).json("customer not found");
+      }
+    });
+}
+
 module.exports = {
   registerAgent,
   getRegisteredAgent,
   getRegisteredCustomer,
   registerCustomer,
+  certainCustomer,
 };
