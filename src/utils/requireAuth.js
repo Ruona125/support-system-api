@@ -57,8 +57,28 @@ function agentAuth(req, res, next) {
   }
 }
 
+//this is the token for admins
+function adminAuth(req, res, next) {
+  const token = req.headers["authorization"];
+  if (!token) {
+    return res.status(401).json({ message: "no token provided" });
+  }
+  try {
+    const decoded = jwt.verify(token, "your_secret_key");
+    req.roles = decoded.roles;
+    // console.log(decoded.userId);
+    if (decoded.roles !== "admin") {
+      return res.status(401).json("unauthorize");
+    }
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+}
+
 module.exports = {
   verifyCertainToken,
   agentAuth,
   verifyAuthToken,
+  adminAuth,
 };

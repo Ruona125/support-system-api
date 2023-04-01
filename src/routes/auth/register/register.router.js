@@ -1,7 +1,7 @@
 const express = require("express");
 const registeredAgents = express.Router();
 
-const { verifyCertainToken } = require("../../../utils/requireAuth");
+const { verifyCertainToken, adminAuth } = require("../../../utils/requireAuth");
 
 const {
   registerAgent,
@@ -12,10 +12,10 @@ const {
   createAdmin,
 } = require("./register.controller");
 
-registeredAgents.post("/agent/register", registerAgent);
-registeredAgents.get("/agents", getRegisteredAgent);
+registeredAgents.post("/agent/register", adminAuth, registerAgent);
+registeredAgents.get("/agents", adminAuth, getRegisteredAgent);
 registeredAgents.post("/customer/register", registerCustomer);
-registeredAgents.get("/customer", getRegisteredCustomer);
+registeredAgents.get("/customer", verifyCertainToken, getRegisteredCustomer);
 registeredAgents.get(
   "/customer/:customer_id",
   verifyCertainToken,
