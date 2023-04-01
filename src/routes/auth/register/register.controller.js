@@ -86,10 +86,37 @@ function certainCustomer(req, res) {
     });
 }
 
+async function createAdmin(req, res) {
+  const { name, email, passwords } = req.body;
+  if (!email || !passwords) {
+    return res
+      .status(400)
+      .json({ message: "email and passwords are required" });
+  }
+
+  //to hash the password
+  const hashedPassword = await bcrypt.hash(passwords, 10);
+
+  try {
+    await db("admins").insert({
+      name,
+      passwords: hashedPassword,
+      email,
+      roles: "admin",
+      admin_id: uuid.v4(),
+    });
+    res.json({ message: "admin successfully created" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json("an error occured");
+  }
+}
+
 module.exports = {
   registerAgent,
   getRegisteredAgent,
   getRegisteredCustomer,
   registerCustomer,
   certainCustomer,
+  createAdmin,
 };

@@ -9,6 +9,7 @@ const {
   registerCustomer,
   getRegisteredCustomer,
   certainCustomer,
+  createAdmin,
 } = require("./register.controller");
 
 registeredAgents.post("/agent/register", registerAgent);
@@ -20,6 +21,7 @@ registeredAgents.get(
   verifyCertainToken,
   certainCustomer
 );
+registeredAgents.post("/admin/register", createAdmin);
 
 module.exports = {
   registeredAgents,
