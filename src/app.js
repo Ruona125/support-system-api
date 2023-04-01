@@ -6,6 +6,7 @@ const { registeredAgents } = require("./routes/auth/register/register.router");
 const { agentLoginRouter } = require("./routes/auth/login/login.router");
 const { productRouter } = require("./routes/products/products.router.js");
 const { caseRouter } = require("./routes/case/cases.router");
+const { agentDetails } = require("./routes/agents/agent.router");
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(registeredAgents);
 app.use(agentLoginRouter);
 app.use(productRouter);
 app.use(caseRouter);
+app.use(agentDetails);
 
 module.exports = {
   app,
