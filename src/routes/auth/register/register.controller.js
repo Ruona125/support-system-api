@@ -32,7 +32,7 @@ async function registerAgent(req, res) {
 }
 
 async function registerCustomer(req, res) {
-  const { name, email, passwords, address } = req.body;
+  const { name, email, address, passwords } = req.body;
   if (!email || !passwords) {
     return res
       .status(400)
