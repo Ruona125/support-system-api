@@ -1,7 +1,11 @@
 const express = require("express");
 const registeredAgents = express.Router();
 
-const { verifyCertainToken, adminAuth } = require("../../../utils/requireAuth");
+const {
+  verifyCertainToken,
+  adminAuth,
+  agentAuth,
+} = require("../../../utils/requireAuth");
 
 const {
   registerAgent,
@@ -15,7 +19,7 @@ const {
 registeredAgents.post("/agent/register", adminAuth, registerAgent);
 registeredAgents.get("/agents", adminAuth, getRegisteredAgent);
 registeredAgents.post("/customer/register", registerCustomer);
-registeredAgents.get("/customer", verifyCertainToken, getRegisteredCustomer);
+registeredAgents.get("/customer", agentAuth, getRegisteredCustomer);
 registeredAgents.get(
   "/customer/:customer_id",
   verifyCertainToken,
