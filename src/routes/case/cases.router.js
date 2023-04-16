@@ -14,9 +14,9 @@ const {
 } = require("./cases.controller");
 
 caseRouter.post("/case", createCase);
-caseRouter.post("/case/complete/:case_id", closeCase);
+caseRouter.post("/case/complete/:case_id", agentAuth, closeCase);
 caseRouter.get("/case", agentAuth, viewCases);
-caseRouter.get("admin/case", adminAuth, viewCases);
+caseRouter.get("/admin/case", adminAuth, viewCases);
 caseRouter.get("/case/:case_id", certainCase);
 
 module.exports = {

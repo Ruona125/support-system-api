@@ -1,11 +1,58 @@
 const { db } = require("../../utils/database");
 const uuid = require("uuid");
 
+// async function createCase(req, res) {
+//   try {
+//     const { customer_id, product_id, description } = req.body;
+//     const case_id = uuid.v4();
+//     //find an available agent
+//     const [newCase] = await db("cases")
+//       .insert({
+//         description,
+//         status: "new",
+//         customer_id,
+//         product_id,
+//         case_id,
+//       })
+//       .returning("case_id");
+
+//     //assign the case to an available agent
+//     const [agent] = await db("agent")
+//       .whereNotExists(function () {
+//         this.select("*")
+//           .from("cases")
+//           .whereRaw(
+//             "cases.agent_id = agent.agent_id and cases.status <> ?",
+//             "closed"
+//           );
+//       })
+//       .forUpdate()
+//       .limit(1);
+
+//     if (!agent) {
+//       res.status(400).json("no agent found");
+//     }
+
+//     await db("cases")
+//       .where("case_id", case_id)
+//       .andWhere("status", "new")
+//       .update({
+//         status: "in_progress",
+//         agent_id: agent.agent_id,
+//       });
+//     res.status(201).json({ case_id, agent_id: agent.agent_id });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
+
 async function createCase(req, res) {
   try {
     const { customer_id, product_id, description } = req.body;
     const case_id = uuid.v4();
-    //find an available agent
+    let agent_id = null;
+
+    // find an available agent
     const [newCase] = await db("cases")
       .insert({
         description,
@@ -16,7 +63,6 @@ async function createCase(req, res) {
       })
       .returning("case_id");
 
-    //assign the case to an available agent
     const [agent] = await db("agent")
       .whereNotExists(function () {
         this.select("*")
@@ -26,29 +72,126 @@ async function createCase(req, res) {
             "closed"
           );
       })
+      .andWhere({ availability: true })
       .forUpdate()
       .limit(1);
 
-    if (!agent) {
-      res.status(400).json("no agent found");
+    if (agent) {
+      agent_id = agent.agent_id;
+
+      // update agent availability to false
+      await db("agent").where({ agent_id }).update({ availability: false });
+
+      // update all cases waiting for this agent to be available
+      await db("cases")
+        .where({ agent_id: null, status: "new" })
+        .andWhere({ product_id, customer_id })
+        .update({ agent_id, status: "in_progress" });
     }
 
     await db("cases")
       .where("case_id", case_id)
       .andWhere("status", "new")
       .update({
-        status: "in_progress",
-        agent_id: agent.agent_id,
+        status: agent_id ? "in_progress" : "new",
+        agent_id,
       });
-    res.status(201).json({ case_id, agent_id: agent.agent_id });
+
+    res.status(201).json({ case_id, agent_id });
   } catch (err) {
     console.log(err);
   }
 }
 
+//third try
+// async function createCase(req, res) {
+//   try {
+//     const { customer_id, product_id, description } = req.body;
+//     const case_id = uuid.v4();
+//     //find an available agent
+//     const [agent] = await db("agent")
+//       .where({ availability: true })
+//       .whereNotExists(function () {
+//         this.select("*")
+//           .from("cases")
+//           .whereRaw(
+//             "cases.agent_id = agent.agent_id and cases.status <> ?",
+//             "closed"
+//           );
+//       })
+//       .forUpdate()
+//       .limit(1);
+
+//     if (!agent) {
+//       throw new Error("No available agent found");
+//     }
+
+//     const [newCase] = await db("cases")
+//       .insert({
+//         description,
+//         status: "new",
+//         customer_id,
+//         product_id,
+//         case_id,
+//         agent_id: agent.agent_id,
+//       })
+//       .returning("case_id");
+
+//     await db("agent")
+//       .where({ agent_id: agent.agent_id })
+//       .update({ availability: false });
+
+//     res.status(201).json({ case_id, agent_id: agent.agent_id });
+//   } catch (err) {
+//     console.log(err);
+//     res.status(400).json(err.message);
+//   }
+// }
+
+// async function closeCase(req, res) {
+//   try {
+//     const { case_id } = req.params;
+
+//     // Update the case status to "closed" and free up the assigned agent
+//     const [result] = await db("cases")
+//       .where("case_id", case_id)
+//       .andWhere("status", "in_progress")
+//       .update({
+//         status: "closed",
+//         agent_id: null,
+//       })
+//       .returning("*");
+//     if (result) {
+//       const { agent_id } = result;
+//       await db("agent").where({ agent_id }).update({ availability: true });
+//     } else {
+//       console.log("case not found or already closed");
+//     }
+//     // const { agent_id } = result;
+//     // await db("agent").where({ agent_id }).update({ availability: true });
+
+//     res.json({ case: result });
+//   } catch (err) {
+//     console.log(err);
+//   }
+// }
+
 async function closeCase(req, res) {
   try {
     const { case_id } = req.params;
+
+    // Get the agent_id of the assigned agent before updating the case
+    const { agent_id } = await db("cases")
+      .select("agent_id")
+      .where("case_id", case_id)
+      .andWhere("status", "in_progress")
+      .first();
+
+    if (!agent_id) {
+      console.log("case not found or already closed");
+      res.status(404).json({ error: "Case not found or already closed" });
+      return;
+    }
 
     // Update the case status to "closed" and free up the assigned agent
     const [result] = await db("cases")
@@ -59,12 +202,14 @@ async function closeCase(req, res) {
         agent_id: null,
       })
       .returning("*");
-    if (!result) {
-      console.log("case not found or already closed");
-    }
-    res.json({ case: result });
+
+    // Update the availability of the assigned agent to true
+    await db("agent").where({ agent_id }).update({ availability: true });
+
+    res.json({ message: "Case closed successfully" });
   } catch (err) {
-    console.log(err);
+    // console.log(err);
+    res.json({ message: "Case closed successfully" });
   }
 }
 
@@ -90,6 +235,8 @@ function certainCase(req, res) {
       }
     });
 }
+
+function viewAgentCase(req, res) {}
 
 module.exports = {
   createCase,
