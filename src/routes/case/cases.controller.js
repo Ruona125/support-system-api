@@ -80,7 +80,9 @@ async function createCase(req, res) {
       agent_id = agent.agent_id;
 
       // update agent availability to false
-      await db("agent").where({ agent_id }).update({ availability: false });
+      await db("agent")
+        .where({ agent_id })
+        .update({ availability: false, status: "unavailable" });
 
       // update all cases waiting for this agent to be available
       await db("cases")
@@ -204,7 +206,9 @@ async function closeCase(req, res) {
       .returning("*");
 
     // Update the availability of the assigned agent to true
-    await db("agent").where({ agent_id }).update({ availability: true });
+    await db("agent")
+      .where({ agent_id })
+      .update({ availability: true, status: "available" });
 
     res.json({ message: "Case closed successfully" });
   } catch (err) {
